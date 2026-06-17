@@ -102,8 +102,7 @@ Both `cloudboosta_db` and `cloudboosta_wordpress` should show status **Up**.
 
 ### 5. Open the WordPress installer
 
-Navigate to your EC2 public IP in a browser: 
-http://<your-ec2-public-ip>
+Navigate to your EC2 public IP in a browser:http://<your-ec2-public-ip>
 
 
 Complete the WordPress 5-minute setup wizard. Database credentials are pre-populated from your `.env` file — no manual entry needed.
