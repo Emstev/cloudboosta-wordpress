@@ -166,11 +166,11 @@ sudo systemctl status amazon-cloudwatch-agent
 
 cloudboosta-wordpress/
 
-├── docker-compose.yml    # Service definitions — WordPress + MySQL
+├── docker-compose.yml      # Service definitions — WordPress + MySQL
 
-├── .env                  # Secret credentials (not committed)
+├── .env                    # Secret credentials (not committed)
 
-├── .env.example          # Template for onboarding new developers
+├── .env.example            # Template for onboarding new developers
 
 ├── .gitignore
 
@@ -178,7 +178,7 @@ cloudboosta-wordpress/
 
 └── monitoring/
 
-└── cloudwatch-agent.json  # CloudWatch agent configuration
+└── cloudwatch-agent.json     # CloudWatch agent configuration
 
 
 
