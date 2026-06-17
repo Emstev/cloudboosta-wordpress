@@ -103,7 +103,6 @@ Both `cloudboosta_db` and `cloudboosta_wordpress` should show status **Up**.
 ### 5. Open the WordPress installer
 
 Navigate to your EC2 public IP in a browser: 
-
 http://<your-ec2-public-ip>
 
 
