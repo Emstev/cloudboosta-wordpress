@@ -26,6 +26,11 @@ Browser
 [Named Volume: db_data]   ← persistent database storage
 
 [Named Volume: wp_data]   ← persistent WordPress files
+│
+
+▼
+
+[CloudWatch Alarms] ── SNS ── Email alert
 
 
 ## Tech Stack
@@ -36,6 +41,8 @@ Browser
 | Database | MySQL 8.0 
 | Containerisation | Docker & Docker Compose 
 | Infrastructure | AWS EC2 — Ubuntu, t2.medium, eu-west-2 
+| Monitoring | AWS CloudWatch (metrics, logs, alarms) 
+| Alerting | AWS SNS (email notifications) 
 | Version Control | GitHub 
 
 
@@ -112,6 +119,48 @@ Complete the WordPress 5-minute setup wizard. Database credentials are pre-popul
 
 
 
+## Monitoring Setup
+
+CloudWatch monitoring collects EC2 infrastructure metrics and Docker container logs, and triggers email alerts when thresholds are breached.
+
+### Install and start the CloudWatch agent
+
+```bash
+wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+sudo dpkg -i amazon-cloudwatch-agent.deb
+
+sudo cp monitoring/cloudwatch-agent.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config \
+  -m ec2 \
+  -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json \
+  -s
+```
+
+### Verify the agent is running
+
+```bash
+sudo systemctl status amazon-cloudwatch-agent
+```
+
+### What is monitored
+
+| Metric | Threshold | Alarm |
+|--------|-----------|-------|
+| CPU utilisation | > 80% | `cloudboosta-high-cpu` 
+| Disk usage | > 85% | `cloudboosta-disk-full` |
+| EC2 status check | Failed | `cloudboosta-status-check` |
+| Docker logs | All containers | `/cloudboosta/docker` log group |
+
+### View metrics and logs
+
+- **Metrics:** AWS Console → CloudWatch → Metrics → CWAgent
+- **Logs:** AWS Console → CloudWatch → Log groups → `/cloudboosta/docker`
+- **Alarms:** AWS Console → CloudWatch → Alarms
+
+
+
 ## Project Structure
 
 cloudboosta-wordpress/
@@ -124,7 +173,9 @@ cloudboosta-wordpress/
 
 ├── .gitignore
 
-└── README.md
+├── README.md
+└── monitoring/
+└── cloudwatch-agent.json  # CloudWatch agent configuration
 
 
 
@@ -139,7 +190,10 @@ cloudboosta-wordpress/
 | WordPress logs only | `docker-compose logs -f wordpress` 
 | Rebuild after changes | `docker-compose up -d --build` 
 | Shell into WordPress | `docker exec -it cloudboosta_wordpress bash` 
-| Shell into MySQL | `docker exec -it cloudboosta_db mysql -u wp_user -p` |
+| Shell into MySQL | `docker exec -it cloudboosta_db mysql -u wp_user -p` 
+| CloudWatch agent status | `sudo systemctl status amazon-cloudwatch-agent` 
+| Restart CloudWatch agent | `sudo systemctl restart amazon-cloudwatch-agent` 
+
 
 
 
@@ -155,6 +209,8 @@ cloudboosta-wordpress/
 
 **Environment variables** — all credentials are injected at runtime from `.env`, keeping secrets out of the codebase and making the stack portable across environments.
 
+**CloudWatch agent** — infrastructure metrics and Docker container logs are shipped to CloudWatch every 60 seconds. Alarms notify via SNS email when CPU, disk, or instance health thresholds are breached.
+
 
 
 ## Security Considerations
@@ -162,6 +218,7 @@ cloudboosta-wordpress/
 - Change all default credentials in `.env` before deploying
 - Restrict EC2 security group: only expose port 80 (and 443 for HTTPS)
 - MySQL is not exposed on a host port — only accessible internally via `wp_net`
+- IAM role follows least-privilege — only `CloudWatchAgentServerPolicy` is attached
 - Use HTTPS in production (consider adding an Nginx reverse proxy with Let's Encrypt)
 
 
