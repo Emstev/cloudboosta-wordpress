@@ -175,7 +175,9 @@ cloudboosta-wordpress/
 ├── .gitignore
 
 ├── README.md
+
 └── monitoring/
+
 └── cloudwatch-agent.json  # CloudWatch agent configuration
 
 
